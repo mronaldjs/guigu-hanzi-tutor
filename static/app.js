@@ -24,8 +24,11 @@
   const gridToggleBtn = document.getElementById('gridToggleBtn');
   const undoBtn = document.getElementById('undoBtn');
   const clearBtn = document.getElementById('clearBtn');
+  const saveDrawingBtn = document.getElementById('saveDrawingBtn');
+  const downloadDrawingBtn = document.getElementById('downloadDrawingBtn');
   const candidatesList = document.getElementById('candidatesList');
   const recognizeStatus = document.getElementById('recognizeStatus');
+  const appToast = document.getElementById('appToast');
 
   // DOM Elements - Sections
   const studioSection = document.getElementById('studioSection');
@@ -69,6 +72,14 @@
   const closeNotebookBtn = document.getElementById('closeNotebookBtn');
   const savedWordsBody = document.getElementById('savedWordsBody');
   const notebookSearchInput = document.getElementById('notebookSearchInput');
+  const tabWordsBtn = document.getElementById('tabWordsBtn');
+  const tabDrawingsBtn = document.getElementById('tabDrawingsBtn');
+  const tabWordsCount = document.getElementById('tabWordsCount');
+  const tabDrawingsCount = document.getElementById('tabDrawingsCount');
+  const savedWordsView = document.getElementById('savedWordsView');
+  const savedDrawingsView = document.getElementById('savedDrawingsView');
+  const savedDrawingsGrid = document.getElementById('savedDrawingsGrid');
+  const clearAllDrawingsBtn = document.getElementById('clearAllDrawingsBtn');
 
   // Glossary Modal
   const glossaryModal = document.getElementById('glossaryModal');
@@ -607,7 +618,7 @@
       } catch (e) {}
     }
     cachedFavorites = favs;
-    savedCountBadge.textContent = cachedFavorites.length;
+    updateAllNotebookCounters();
     renderFavorites(cachedFavorites);
   }
 
@@ -668,6 +679,294 @@
 
       savedWordsBody.appendChild(card);
     });
+  }
+
+  // Toast Notification System
+  let toastTimer = null;
+  function showToast(msg, duration = 2800) {
+    if (!appToast) return;
+    appToast.textContent = msg;
+    appToast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      appToast.classList.remove('show');
+    }, duration);
+  }
+
+  // Generate High-Res 600x600 PNG of User's Calligraphy with Paper, Grid & Seal
+  function generateDrawingImage() {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = 600;
+    exportCanvas.height = 600;
+    const expCtx = exportCanvas.getContext('2d');
+
+    // 1. Xuan Paper Background
+    expCtx.fillStyle = '#f8f6ee';
+    expCtx.fillRect(0, 0, 600, 600);
+
+    // 2. Paper Border Frame
+    expCtx.strokeStyle = 'rgba(200, 70, 60, 0.45)';
+    expCtx.lineWidth = 3;
+    expCtx.strokeRect(18, 18, 564, 564);
+
+    // 3. Grid Lines (matches screen grid visibility)
+    const showGrid = gridOverlay && !gridOverlay.classList.contains('hidden');
+    if (showGrid) {
+      expCtx.strokeStyle = 'rgba(200, 70, 60, 0.22)';
+      expCtx.lineWidth = 1.5;
+      expCtx.setLineDash([8, 8]);
+
+      // Horizontal
+      expCtx.beginPath();
+      expCtx.moveTo(18, 300); expCtx.lineTo(582, 300);
+      expCtx.stroke();
+
+      // Vertical
+      expCtx.beginPath();
+      expCtx.moveTo(300, 18); expCtx.lineTo(300, 582);
+      expCtx.stroke();
+
+      // Diagonals
+      expCtx.beginPath();
+      expCtx.moveTo(18, 18); expCtx.lineTo(582, 582);
+      expCtx.stroke();
+      expCtx.beginPath();
+      expCtx.moveTo(582, 18); expCtx.lineTo(18, 582);
+      expCtx.stroke();
+      expCtx.setLineDash([]);
+    }
+
+    // 4. Traditional Vermilion Seal "鬼谷"
+    expCtx.save();
+    expCtx.translate(535, 535);
+    expCtx.rotate(-3 * Math.PI / 180);
+    expCtx.strokeStyle = '#b91c1c';
+    expCtx.lineWidth = 2.5;
+    expCtx.strokeRect(-20, -20, 40, 40);
+    expCtx.fillStyle = '#b91c1c';
+    expCtx.font = 'bold 16px "Ma Shan Zheng", "Noto Serif SC", serif';
+    expCtx.textAlign = 'center';
+    expCtx.textBaseline = 'middle';
+    expCtx.globalAlpha = 0.55;
+    expCtx.fillText('鬼谷', 0, 0);
+    expCtx.restore();
+
+    // 5. User Strokes with Calligraphic Curves
+    const rect = canvasWrapper ? canvasWrapper.getBoundingClientRect() : { width: 520, height: 520 };
+    const curW = rect.width > 0 ? rect.width : 520;
+    const curH = rect.height > 0 ? rect.height : 520;
+    const scaleX = 600 / curW;
+    const scaleY = 600 / curH;
+
+    expCtx.lineWidth = 10;
+    expCtx.lineCap = 'round';
+    expCtx.lineJoin = 'round';
+    expCtx.strokeStyle = '#161311';
+
+    for (const stroke of strokes) {
+      if (stroke.length === 0) continue;
+      expCtx.beginPath();
+      expCtx.moveTo(stroke[0].x * scaleX, stroke[0].y * scaleY);
+      for (let i = 1; i < stroke.length; i++) {
+        const p1 = stroke[i - 1];
+        const p2 = stroke[i];
+        const midX = ((p1.x + p2.x) / 2) * scaleX;
+        const midY = ((p1.y + p2.y) / 2) * scaleY;
+        expCtx.quadraticCurveTo(p1.x * scaleX, p1.y * scaleY, midX, midY);
+      }
+      expCtx.stroke();
+    }
+
+    return exportCanvas.toDataURL('image/png');
+  }
+
+  function getDetectedChar() {
+    if (currentCharacter) return currentCharacter;
+    const topCand = candidatesList.querySelector('.cand-char');
+    if (topCand && topCand.textContent && topCand.textContent.trim() !== '--') {
+      return topCand.textContent.trim();
+    }
+    return '字';
+  }
+
+  // LocalStorage Helpers for Drawings
+  function getLocalDrawings() {
+    try {
+      return JSON.parse(localStorage.getItem('guigu_saved_drawings')) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function setLocalDrawings(drawings) {
+    try {
+      localStorage.setItem('guigu_saved_drawings', JSON.stringify(drawings));
+    } catch (e) {}
+    updateAllNotebookCounters();
+  }
+
+  // Save Calligraphy Drawing to Local Gallery
+  function saveCurrentDrawing() {
+    if (strokes.length === 0) {
+      showToast('Desenhe algo na tela primeiro para salvar!');
+      return;
+    }
+
+    const dataUrl = generateDrawingImage();
+    const char = getDetectedChar();
+    const drawings = getLocalDrawings();
+
+    const newDrawing = {
+      id: 'draw_' + Date.now(),
+      char: char,
+      image: dataUrl,
+      strokes: JSON.parse(JSON.stringify(strokes)),
+      timestamp: Date.now(),
+      date: new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+      })
+    };
+
+    drawings.unshift(newDrawing);
+    if (drawings.length > 40) drawings.pop();
+    setLocalDrawings(drawings);
+
+    showToast(`✓ Caligrafia de "${char}" salva no seu caderno!`);
+  }
+
+  // Download Calligraphy as PNG Image File
+  function downloadCurrentDrawing() {
+    if (strokes.length === 0) {
+      showToast('Desenhe algo na tela primeiro para baixar!');
+      return;
+    }
+
+    const dataUrl = generateDrawingImage();
+    const char = getDetectedChar();
+    const filename = `caligrafia_${char}_${Date.now()}.png`;
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showToast(`✓ Caligrafia "${char}" baixada como imagem PNG!`);
+  }
+
+  // Switch Notebook Tabs (Words vs Drawings)
+  function switchNotebookTab(tab) {
+    if (tab === 'words') {
+      tabWordsBtn.classList.add('active');
+      tabDrawingsBtn.classList.remove('active');
+      savedWordsView.classList.remove('hidden');
+      savedDrawingsView.classList.add('hidden');
+      exportAnkiBtn.style.display = 'inline-flex';
+    } else {
+      tabWordsBtn.classList.remove('active');
+      tabDrawingsBtn.classList.add('active');
+      savedWordsView.classList.add('hidden');
+      savedDrawingsView.classList.remove('hidden');
+      exportAnkiBtn.style.display = 'none';
+      renderSavedDrawings();
+    }
+  }
+
+  // Render Saved Drawings Gallery in Notebook
+  function renderSavedDrawings() {
+    if (!savedDrawingsGrid) return;
+    const drawings = getLocalDrawings();
+    updateAllNotebookCounters();
+    savedDrawingsGrid.innerHTML = '';
+
+    if (drawings.length === 0) {
+      if (clearAllDrawingsBtn) clearAllDrawingsBtn.style.display = 'none';
+      savedDrawingsGrid.innerHTML = `
+        <div style="color:var(--text-dim);padding:36px;grid-column:1/-1;text-align:center;">
+          <p style="font-size:16px;margin-bottom:8px;">Nenhuma caligrafia salva ainda!</p>
+          <p style="font-size:13px;">Desenhe um caractere chinês no canvas e clique no botão <strong>"Salvar"</strong> para guardar sua caligrafia aqui.</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (clearAllDrawingsBtn) clearAllDrawingsBtn.style.display = 'inline-flex';
+
+    drawings.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'drawing-card';
+      card.innerHTML = `
+        <div class="drawing-thumb-wrapper">
+          <img src="${d.image}" alt="${d.char}" class="drawing-thumb" loading="lazy">
+          <span class="drawing-char-badge">${d.char}</span>
+        </div>
+        <div class="drawing-info">
+          <div class="drawing-date">${d.date}</div>
+          <div class="drawing-actions">
+            <button class="draw-act-btn load-btn" title="Carregar no Canvas">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              <span>Carregar</span>
+            </button>
+            <button class="draw-act-btn download-btn" title="Baixar PNG">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Baixar</span>
+            </button>
+            <button class="draw-act-btn delete-btn" title="Excluir da Galeria">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector('.load-btn').addEventListener('click', () => loadDrawingIntoCanvas(d));
+      card.querySelector('.download-btn').addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = d.image;
+        a.download = `caligrafia_${d.char}_${d.id}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(`✓ Download da caligrafia "${d.char}" iniciado!`);
+      });
+      card.querySelector('.delete-btn').addEventListener('click', () => {
+        deleteSavedDrawing(d.id);
+      });
+
+      savedDrawingsGrid.appendChild(card);
+    });
+  }
+
+  function loadDrawingIntoCanvas(drawing) {
+    if (!drawing || !drawing.strokes || drawing.strokes.length === 0) return;
+    strokes = JSON.parse(JSON.stringify(drawing.strokes));
+    redrawStrokes();
+    scheduleRecognition(50);
+    notebookModal.classList.add('hidden');
+    showToast(`✓ Caligrafia "${drawing.char}" carregada no canvas!`);
+  }
+
+  function deleteSavedDrawing(id) {
+    let drawings = getLocalDrawings();
+    drawings = drawings.filter(d => d.id !== id);
+    setLocalDrawings(drawings);
+    renderSavedDrawings();
+    showToast('Desenho removido da galeria.');
+  }
+
+  function clearAllSavedDrawings() {
+    if (!confirm('Deseja excluir todas as suas caligrafias salvas?')) return;
+    setLocalDrawings([]);
+    renderSavedDrawings();
+    showToast('Todas as caligrafias foram removidas.');
+  }
+
+  function updateAllNotebookCounters() {
+    const favs = getLocalFavs();
+    const drawings = getLocalDrawings();
+    if (tabWordsCount) tabWordsCount.textContent = favs.length;
+    if (tabDrawingsCount) tabDrawingsCount.textContent = drawings.length;
+    if (savedCountBadge) savedCountBadge.textContent = favs.length + drawings.length;
   }
 
   // Setup HanziWriter Animation in Inspector
@@ -849,6 +1148,8 @@
     // Studio Action Buttons
     clearBtn.addEventListener('click', clearCanvas);
     undoBtn.addEventListener('click', undoLastStroke);
+    if (saveDrawingBtn) saveDrawingBtn.addEventListener('click', saveCurrentDrawing);
+    if (downloadDrawingBtn) downloadDrawingBtn.addEventListener('click', downloadCurrentDrawing);
 
     gridToggleBtn.addEventListener('click', () => {
       gridOverlay.classList.toggle('hidden');
@@ -988,7 +1289,12 @@
     toggleNotebookBtn.addEventListener('click', () => {
       notebookModal.classList.remove('hidden');
       loadFavorites();
+      renderSavedDrawings();
     });
+
+    if (tabWordsBtn) tabWordsBtn.addEventListener('click', () => switchNotebookTab('words'));
+    if (tabDrawingsBtn) tabDrawingsBtn.addEventListener('click', () => switchNotebookTab('drawings'));
+    if (clearAllDrawingsBtn) clearAllDrawingsBtn.addEventListener('click', clearAllSavedDrawings);
 
     const exportAnkiBtn = document.getElementById('exportAnkiBtn');
     if (exportAnkiBtn) {
@@ -1043,6 +1349,7 @@
       setMobileActiveTab(tabNotebook);
       notebookModal.classList.remove('hidden');
       loadFavorites();
+      renderSavedDrawings();
     });
 
     tabGlossary.addEventListener('click', () => {
@@ -1074,6 +1381,7 @@
     resizeCanvas();
     initEvents();
     loadFavorites();
+    updateAllNotebookCounters();
     loadGlossary();
     // Default inspect "仙" (Imortal)
     inspectCharacter('仙');

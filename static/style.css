@@ -1255,6 +1255,219 @@ body {
 
 
 
+/* Notebook Tabs (Palavras vs Caligrafias) */
+.notebook-tabs-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notebook-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notebook-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+.notebook-tab-btn.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-weight: 600;
+}
+
+.tab-badge {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+}
+
+/* Saved Drawings Gallery */
+.saved-drawings-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.drawings-hint {
+  color: var(--text-dim);
+  font-size: 12.5px;
+}
+
+.saved-drawings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  padding: 14px 24px 24px;
+  max-height: 58vh;
+  overflow-y: auto;
+}
+
+.drawing-card {
+  background: rgba(18, 25, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.drawing-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.drawing-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f8f6ee;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawing-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.drawing-char-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(18, 25, 36, 0.88);
+  color: var(--accent-gold);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+.drawing-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawing-date {
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.drawing-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.draw-act-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.draw-act-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+.draw-act-btn.load-btn:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.draw-act-btn.download-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.draw-act-btn.delete-btn {
+  flex: 0 0 32px;
+  padding: 6px 0;
+}
+
+.draw-act-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+/* App Toast Notification */
+.app-toast {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(18, 25, 36, 0.96);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #f8fafc;
+  padding: 10px 20px;
+  border-radius: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 18px var(--accent-jade-glow);
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+}
+
+.app-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .glossary-body, .saved-words-body {
   padding: 20px 24px;
   overflow-y: auto;
@@ -1759,6 +1972,38 @@ body {
 
   .compounds-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* Mobile adjustments for Notebook & Drawings */
+  .notebook-tabs-row {
+    padding: 0 14px 10px;
+    gap: 8px;
+  }
+
+  .notebook-tab-btn {
+    padding: 6px 10px;
+    font-size: 11.5px;
+    gap: 6px;
+  }
+
+  .saved-drawings-toolbar {
+    padding: 10px 14px 4px;
+    font-size: 11.5px;
+  }
+
+  .saved-drawings-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    padding: 10px 14px 18px;
+  }
+
+  .drawing-actions {
+    flex-wrap: wrap;
+  }
+
+  .draw-act-btn {
+    font-size: 10.5px;
+    padding: 4px 6px;
   }
 
   .glossary-body, .saved-words-body {

@@ -74,6 +74,14 @@
               <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
               <span class="btn-text">Desfazer</span>
             </button>
+            <button id="saveDrawingBtn" class="tool-btn" title="Salvar caligrafia no caderno">
+              <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span class="btn-text">Salvar</span>
+            </button>
+            <button id="downloadDrawingBtn" class="tool-btn" title="Baixar imagem da caligrafia (PNG)">
+              <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span class="btn-text">Baixar</span>
+            </button>
             <button id="clearBtn" class="tool-btn danger-hover" title="Limpar tela (Delete / Esc)">
               <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               <span class="btn-text">Limpar</span>
@@ -296,7 +304,7 @@
       </div>
     </div>
 
-    <!-- Notebook / Saved Words Modal -->
+    <!-- Notebook / Saved Words & Drawings Modal -->
     <div class="modal-wrapper hidden" id="notebookModal">
       <div class="modal-backdrop" id="notebookBackdrop"></div>
       <div class="modal-dialog">
@@ -306,8 +314,8 @@
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             </div>
             <div>
-              <h3>Meu Caderno de Vocabulário</h3>
-              <p>Caracteres e palavras que você salvou durante os estudos</p>
+              <h3>Meu Caderno de Estudos</h3>
+              <p>Palavras e caligrafias salvas durante a prática</p>
             </div>
           </div>
           <div class="modal-header-actions">
@@ -318,16 +326,43 @@
             <button class="close-modal-btn" id="closeNotebookBtn">&times;</button>
           </div>
         </div>
-        <div class="glossary-filter-panel">
-          <div class="filter-search-row">
-            <div class="search-input-wrapper">
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" id="notebookSearchInput" placeholder="Filtrar palavras salvas..." autocomplete="off">
-            </div>
-            <div class="filter-count-badge" id="notebookCountBadge">0 salvos</div>
-          </div>
+
+        <!-- Notebook Tabs (Palavras vs Caligrafias) -->
+        <div class="notebook-tabs-row">
+          <button class="notebook-tab-btn active" id="tabWordsBtn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>Palavras Salvas</span>
+            <span class="tab-badge" id="tabWordsCount">0</span>
+          </button>
+          <button class="notebook-tab-btn" id="tabDrawingsBtn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+            <span>Minhas Caligrafias</span>
+            <span class="tab-badge" id="tabDrawingsCount">0</span>
+          </button>
         </div>
-        <div class="saved-words-body" id="savedWordsBody"></div>
+
+        <!-- Section 1: Saved Words View -->
+        <div id="savedWordsView">
+          <div class="glossary-filter-panel">
+            <div class="filter-search-row">
+              <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="notebookSearchInput" placeholder="Filtrar palavras salvas..." autocomplete="off">
+              </div>
+              <div class="filter-count-badge" id="notebookCountBadge">0 salvos</div>
+            </div>
+          </div>
+          <div class="saved-words-body" id="savedWordsBody"></div>
+        </div>
+
+        <!-- Section 2: Saved Drawings Gallery View -->
+        <div id="savedDrawingsView" class="hidden">
+          <div class="saved-drawings-toolbar">
+            <span class="drawings-hint">Caligrafias manuais salvas a partir da área de desenho</span>
+            <button id="clearAllDrawingsBtn" class="pill-btn-sm danger-hover" title="Excluir todas as caligrafias">Limpar Galeria</button>
+          </div>
+          <div class="saved-drawings-grid" id="savedDrawingsGrid"></div>
+        </div>
       </div>
     </div>
 
@@ -375,6 +410,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Notification Toast -->
+  <div id="appToast" class="app-toast"></div>
 
   <script src="app.js"></script>
 </body>

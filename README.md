@@ -91,6 +91,11 @@ Não requer `pip` nem instalação de pacotes externos — utiliza exclusivament
 - Sincronização automática entre o banco de dados e o `localStorage` do navegador.
 - **Exportação TSV para Anki**: Baixe sua lista de estudos pronta para importar como baralho de cartões no Anki.
 
+### 8. Galeria de Caligrafias & Download de Imagens (PNG)
+- **Salvar no Caderno**: Guarde suas caligrafias manuais na galeria pessoal de estudos para acompanhar a evolução dos seus traços.
+- **Carregar no Canvas**: Recarregue qualquer desenho salvo anteriormente de volta na área de desenho para continuar escrevendo ou inspecionar novamente.
+- **Exportação em Alta Resolução**: Baixe suas caligrafias como imagens PNG elegantes em 600x600, renderizadas com papel de arroz, grade e o selo tradicional em cinábrio (*朱砂印* "鬼谷").
+
 ---
 
 ## 🛠️ Arquitetura Técnica
