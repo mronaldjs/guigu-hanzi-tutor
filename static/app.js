@@ -279,10 +279,12 @@
   // Render Candidates Bar
   function renderCandidates(candidates) {
     candidatesList.innerHTML = '';
-    candidates.forEach((cand) => {
+    candidates.forEach((cand, idx) => {
       const item = document.createElement('div');
       item.className = 'candidate-item' + (cand.char === currentCharacter ? ' selected' : '');
+      item.setAttribute('data-index', idx + 1);
       item.innerHTML = `
+        <span class="cand-rank">${idx + 1}</span>
         <span class="cand-char">${cand.char}</span>
         <span class="cand-pinyin">${cand.pinyin || ''}</span>
       `;
@@ -343,7 +345,7 @@
             const defDiv = document.createElement('div');
             defDiv.className = 'def-item';
             defDiv.innerHTML = `
-              <span class="def-num">${defCount++}.</span>
+              <span class="def-num">${String(defCount++).padStart(2, '0')}</span>
               <span class="def-text">${def}</span>
             `;
             definitionsList.appendChild(defDiv);
@@ -422,7 +424,7 @@
         e.definitions.forEach(d => {
           const div = document.createElement('div');
           div.className = 'def-item';
-          div.innerHTML = `<span class="def-num">${count++}.</span><span class="def-text">${d}</span>`;
+          div.innerHTML = `<span class="def-num">${String(count++).padStart(2, '0')}</span><span class="def-text">${d}</span>`;
           zoomDefsList.appendChild(div);
         });
       });
@@ -706,6 +708,19 @@
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'zh-CN';
     utterance.rate = 0.85;
+
+    audioBtn.classList.add('playing');
+    if (zoomAudioBtn) zoomAudioBtn.classList.add('playing');
+
+    utterance.onend = () => {
+      audioBtn.classList.remove('playing');
+      if (zoomAudioBtn) zoomAudioBtn.classList.remove('playing');
+    };
+    utterance.onerror = () => {
+      audioBtn.classList.remove('playing');
+      if (zoomAudioBtn) zoomAudioBtn.classList.remove('playing');
+    };
+
     window.speechSynthesis.speak(utterance);
   }
 
@@ -928,7 +943,7 @@
       });
     }
 
-    // Keyboard Shortcuts (Ctrl+Z, Del, Esc)
+    // Keyboard Shortcuts (Ctrl+Z, Del, Esc, 1-9 Candidates)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -941,6 +956,13 @@
         zoomModal.classList.add('hidden');
         notebookModal.classList.add('hidden');
         glossaryModal.classList.add('hidden');
+      } else if (!e.ctrlKey && !e.metaKey && e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key, 10) - 1;
+        const cands = candidatesList.querySelectorAll('.candidate-item');
+        if (cands && cands[idx]) {
+          e.preventDefault();
+          cands[idx].click();
+        }
       }
     });
 
