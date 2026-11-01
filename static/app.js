@@ -314,7 +314,8 @@
         : 'Idêntico ao simplificado';
 
       // Update Save Button State
-      updateSaveBtnState(data.is_saved);
+      const isSavedLocal = getLocalFavs().some(f => f.word === char);
+      updateSaveBtnState(data.is_saved || isSavedLocal);
 
       // Setup Hanzi Writer Animation in Inspector
       setupHanziWriter(char);
@@ -396,7 +397,8 @@
     zoomTrad.textContent = (primaryEntry && primaryEntry.traditional !== char) ? primaryEntry.traditional : 'Idêntico ao simplificado';
 
     // Update zoom save button
-    updateZoomSaveBtnState(currentEntryData.is_saved);
+    const isSavedZoom = getLocalFavs().some(f => f.word === char);
+    updateZoomSaveBtnState(currentEntryData.is_saved || isSavedZoom);
 
     // Zoom Context Banner
     if (currentEntryData.xianxia && currentEntryData.xianxia.length > 0) {
@@ -503,11 +505,44 @@
     }
   }
 
+  // LocalStorage Helpers for Favorites
+  function getLocalFavs() {
+    try {
+      return JSON.parse(localStorage.getItem('guigu_saved_favs')) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function setLocalFavs(favs) {
+    try {
+      localStorage.setItem('guigu_saved_favs', JSON.stringify(favs));
+    } catch (e) {}
+  }
+
+  function exportNotebookToTSV() {
+    const favs = getLocalFavs();
+    const lines = ["Caractere\tPinyin\tSignificado\tNotas Cultivo"];
+    favs.forEach(f => {
+      lines.push(`${f.word}\t${f.pinyin || ''}\t${f.definition || ''}\t${f.xianxia_note || ''}`);
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/tab-separated-values;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'palavras_salvas_hanzi.tsv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   // Toggle Save Word / Character
   async function toggleSaveCurrentWord() {
     if (!currentCharacter || !currentEntryData) return;
 
-    const isCurrentlySaved = saveWordBtn.classList.contains('saved');
+    let favs = getLocalFavs();
+    const isCurrentlySaved = favs.some(f => f.word === currentCharacter);
     const primaryEntry = currentEntryData.entries && currentEntryData.entries.length > 0 ? currentEntryData.entries[0] : null;
     const pinyin = primaryEntry ? primaryEntry.pinyin : '';
     const definition = primaryEntry && primaryEntry.definitions ? primaryEntry.definitions.slice(0, 2).join(' / ') : '';
@@ -515,21 +550,32 @@
     const xianxiaNote = topX ? `${topX.category}: ${topX.translation_pt}` : '';
 
     if (isCurrentlySaved) {
+      favs = favs.filter(f => f.word !== currentCharacter);
+      setLocalFavs(favs);
+      updateSaveBtnState(false);
+      updateZoomSaveBtnState(false);
+      loadFavorites();
       try {
-        await fetch('/api/favorites/delete', {
+        fetch('/api/favorites/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ word: currentCharacter })
         });
-        updateSaveBtnState(false);
-        updateZoomSaveBtnState(false);
-        loadFavorites();
-      } catch (e) {
-        console.error('Delete favorite error:', e);
-      }
+      } catch (e) {}
     } else {
+      favs.unshift({
+        word: currentCharacter,
+        pinyin: pinyin,
+        definition: definition,
+        xianxia_note: xianxiaNote,
+        created_at: new Date().toISOString()
+      });
+      setLocalFavs(favs);
+      updateSaveBtnState(true);
+      updateZoomSaveBtnState(true);
+      loadFavorites();
       try {
-        await fetch('/api/favorites', {
+        fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -539,26 +585,26 @@
             xianxia_note: xianxiaNote
           })
         });
-        updateSaveBtnState(true);
-        updateZoomSaveBtnState(true);
-        loadFavorites();
-      } catch (e) {
-        console.error('Save favorite error:', e);
-      }
+      } catch (e) {}
     }
   }
 
   // Load and Render Saved Favorites
   async function loadFavorites() {
-    try {
-      const resp = await fetch('/api/favorites');
-      const data = await resp.json();
-      cachedFavorites = data.favorites || [];
-      savedCountBadge.textContent = cachedFavorites.length;
-      renderFavorites(cachedFavorites);
-    } catch (e) {
-      console.error('Failed to load favorites:', e);
+    let favs = getLocalFavs();
+    if (favs.length === 0) {
+      try {
+        const resp = await fetch('/api/favorites');
+        const data = await resp.json();
+        if (data.favorites && data.favorites.length > 0) {
+          favs = data.favorites;
+          setLocalFavs(favs);
+        }
+      } catch (e) {}
     }
+    cachedFavorites = favs;
+    savedCountBadge.textContent = cachedFavorites.length;
+    renderFavorites(cachedFavorites);
   }
 
   function renderFavorites(favs) {
@@ -919,6 +965,11 @@
       notebookModal.classList.remove('hidden');
       loadFavorites();
     });
+
+    const exportAnkiBtn = document.getElementById('exportAnkiBtn');
+    if (exportAnkiBtn) {
+      exportAnkiBtn.addEventListener('click', exportNotebookToTSV);
+    }
 
     closeNotebookBtn.addEventListener('click', () => {
       notebookModal.classList.add('hidden');
