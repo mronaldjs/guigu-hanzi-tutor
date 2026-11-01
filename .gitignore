@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+venv/
+
+# Cache
+data/cedict_raw.txt.gz
+
+# System
+.DS_Store
+Thumbs.db
+desktop.ini

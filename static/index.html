@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Guigu Hanzi Tutor | 鬼谷汉字</title>
+  
+  <!-- Web App / PWA Meta Tags -->
+  <meta name="theme-color" content="#0f141c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hanzi Tutor">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Noto Serif SC & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <!-- Hanzi Writer for Stroke Order Animations -->
+  <script src="lib/hanzi-writer.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-badge">仙</div>
+        <div>
+          <h1 class="brand-title">Guigu Hanzi Tutor <span class="cn-title">鬼谷汉字</span></h1>
+          <p class="brand-sub">Reconhecimento de Caligrafia & Dicionário de Cultivo Xianxia</p>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="header-search">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="searchInput" placeholder="Digite ou cole caracteres (ex: 筑, 气, 宗, 突破)..." autocomplete="off">
+          <button id="clearSearchBtn" class="icon-btn-sm" title="Limpar busca">&times;</button>
+        </div>
+      </div>
+
+      <!-- Header Desktop Actions -->
+      <div class="header-actions">
+        <button id="toggleNotebookBtn" class="pill-btn notebook-btn" title="Ver palavras e caracteres salvos">
+          <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Meu Caderno</span>
+          <span class="badge-count" id="savedCountBadge">0</span>
+        </button>
+        <button id="toggleGlossaryBtn" class="pill-btn highlight-btn" title="Consultar glossário por categorias">
+          <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Glossário Geral</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-grid">
+      <!-- Left Column: Drawing Studio -->
+      <section class="studio-card" id="studioSection">
+        <div class="card-header">
+          <div class="card-title">
+            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+            <h3>Área de Caligrafia</h3>
+          </div>
+          <div class="studio-controls">
+            <button id="gridToggleBtn" class="tool-btn active" title="Alternar Grade Mi Zi Ge (米字格)">
+              <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+              <span class="btn-text">Grade</span>
+            </button>
+            <button id="undoBtn" class="tool-btn" title="Desfazer último traço (Ctrl+Z)">
+              <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
+              <span class="btn-text">Desfazer</span>
+            </button>
+            <button id="clearBtn" class="tool-btn danger-hover" title="Limpar tela (Delete / Esc)">
+              <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span class="btn-text">Limpar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Canvas Container with Rice Paper Texture & Grid -->
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="drawCanvas" width="520" height="520"></canvas>
+          <div class="grid-overlay" id="gridOverlay">
+            <div class="grid-line horizontal"></div>
+            <div class="grid-line vertical"></div>
+            <div class="grid-line diagonal-1"></div>
+            <div class="grid-line diagonal-2"></div>
+            <div class="grid-border"></div>
+          </div>
+          <div class="canvas-hint" id="canvasHint">
+            <span>Desenhe um caractere chinês aqui com o dedo, caneta ou mouse</span>
+          </div>
+        </div>
+
+        <!-- Candidate Bar -->
+        <div class="candidates-container">
+          <div class="candidates-label">
+            <span>Candidatos Reconhecidos:</span>
+            <span class="auto-hint" id="recognizeStatus">Desenhe para reconhecer...</span>
+          </div>
+          <div class="candidates-list" id="candidatesList">
+            <div class="candidate-empty">Os caracteres correspondentes aparecerão aqui</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Character Inspector & Context -->
+      <section class="inspector-card" id="inspectorSection">
+        <!-- Default Empty State -->
+        <div class="inspector-placeholder" id="inspectorPlaceholder">
+          <div class="placeholder-emblem">
+            <svg viewBox="0 0 100 100" class="dao-emblem" fill="none" stroke="currentColor">
+              <circle cx="50" cy="50" r="46" stroke-width="3"></circle>
+              <path d="M50 4 A46 46 0 0 1 50 96 A23 23 0 0 1 50 50 A23 23 0 0 0 50 4" fill="currentColor" opacity="0.3"></path>
+              <circle cx="50" cy="27" r="6" fill="currentColor"></circle>
+              <circle cx="50" cy="73" r="6" stroke-width="3"></circle>
+            </svg>
+          </div>
+          <h3>Nenhum caractere selecionado</h3>
+          <p>Desenhe um caractere na tela ao lado ou use a busca para ver significado, pinyin, áudio, animação de traços e termos de cultivo.</p>
+        </div>
+
+        <!-- Populated Inspector Content -->
+        <div class="inspector-content hidden" id="inspectorContent">
+          <!-- Top Char Banner -->
+          <div class="char-header">
+            <div class="char-display-group">
+              <div class="char-main-box" id="charMainBox" title="Clique para ver em tela cheia / ideograma ampliado">
+                <span class="char-large" id="charDisplay">--</span>
+                <button class="char-zoom-btn" id="expandCharBtn" title="Ver em tela cheia / ampliado">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                </button>
+                <button class="char-copy-btn" id="copyCharBtn" title="Copiar Caractere">
+                  <svg class="copy-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+              <div class="char-meta">
+                <div class="pinyin-row">
+                  <span class="pinyin-badge" id="pinyinDisplay">--</span>
+                  <button class="audio-btn" id="audioBtn" title="Ouvir pronúncia em Mandarim">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    <span>Ouvir</span>
+                  </button>
+                  <button class="save-word-btn" id="saveWordBtn" title="Salvar no meu caderno de vocabulário">
+                    <svg class="star-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span id="saveBtnText">Salvar</span>
+                  </button>
+                </div>
+                <div class="alt-row">
+                  <span class="meta-label">Tradicional:</span>
+                  <span class="meta-val" id="tradDisplay">--</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- HanziWriter Stroke Animation Widget -->
+            <div class="stroke-writer-box">
+              <div id="hanziWriterTarget"></div>
+              <div class="writer-actions">
+                <button id="animateStrokeBtn" class="mini-btn">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Animar</span>
+                </button>
+                <button id="quizStrokeBtn" class="mini-btn">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  <span>Treinar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Xianxia Cultivation Special Banner (Highlighted if matches) -->
+          <div class="xianxia-banner hidden" id="xianxiaBanner">
+            <div class="banner-badge" id="xianxiaBadge">Contexto Especial</div>
+            <div class="banner-body">
+              <div class="banner-title" id="xianxiaTitle">--</div>
+              <div class="banner-trans" id="xianxiaTrans">--</div>
+              <div class="banner-lore" id="xianxiaLore">--</div>
+            </div>
+          </div>
+
+          <!-- Definitions Section -->
+          <div class="section-block">
+            <h4 class="section-title">Significados no Dicionário</h4>
+            <div class="definitions-list" id="definitionsList"></div>
+          </div>
+
+          <!-- Compound Words Section -->
+          <div class="section-block">
+            <h4 class="section-title">Palavras Compostas Comuns</h4>
+            <div class="compounds-grid" id="compoundsGrid"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar (Appears on small screens) -->
+    <nav class="mobile-bottom-nav">
+      <button class="nav-tab active" id="tabStudio">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+        <span>Desenhar</span>
+      </button>
+      <button class="nav-tab" id="tabInspector">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Detalhes</span>
+      </button>
+      <button class="nav-tab" id="tabNotebook">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>Caderno</span>
+      </button>
+      <button class="nav-tab" id="tabGlossary">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Glossário</span>
+      </button>
+    </nav>
+
+    <!-- FULLSCREEN / ZOOM MODAL (Ideograma Ampliado) -->
+    <div class="modal-wrapper hidden" id="zoomModal">
+      <div class="modal-backdrop" id="zoomBackdrop"></div>
+      <div class="modal-dialog zoom-dialog">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-badge-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+            </div>
+            <div>
+              <h3>Visualização em Detalhes</h3>
+              <p id="zoomSubtitle">Ideograma em escala ampliada com ordem de traços</p>
+            </div>
+          </div>
+          <button class="close-modal-btn" id="closeZoomBtn">&times;</button>
+        </div>
+
+        <div class="zoom-body">
+          <!-- Giant Character Canvas / Animation Box -->
+          <div class="giant-char-container">
+            <div class="giant-char-box">
+              <span class="giant-char-text" id="zoomGiantChar">--</span>
+              <div id="zoomWriterTarget" class="giant-writer-target hidden"></div>
+            </div>
+            <div class="giant-char-controls">
+              <button id="zoomToggleWriterBtn" class="pill-btn-sm">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span id="zoomWriterBtnText">Ver Animação de Traços</span>
+              </button>
+              <button id="zoomAnimateBtn" class="pill-btn-sm hidden">▶ Repetir</button>
+              <button id="zoomQuizBtn" class="pill-btn-sm hidden">✍ Treinar</button>
+            </div>
+          </div>
+
+          <!-- Giant Meta Info -->
+          <div class="zoom-info-panel">
+            <div class="zoom-pinyin-row">
+              <span class="zoom-pinyin" id="zoomPinyin">--</span>
+              <button class="audio-btn" id="zoomAudioBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <span>Ouvir</span>
+              </button>
+              <button class="save-word-btn" id="zoomSaveBtn">
+                <svg class="star-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span id="zoomSaveBtnText">Salvar</span>
+              </button>
+            </div>
+
+            <div class="zoom-alt-row">
+              <span class="meta-label">Caractere Tradicional:</span>
+              <span class="meta-val" id="zoomTrad">--</span>
+            </div>
+
+            <!-- Lore / Context Banner in Zoom -->
+            <div class="xianxia-banner hidden" id="zoomXianxiaBanner">
+              <div class="banner-badge" id="zoomXianxiaBadge">Contexto</div>
+              <div class="banner-title" id="zoomXianxiaTitle">--</div>
+              <div class="banner-trans" id="zoomXianxiaTrans">--</div>
+              <div class="banner-lore" id="zoomXianxiaLore">--</div>
+            </div>
+
+            <!-- Definitions in Zoom -->
+            <div class="zoom-section">
+              <h4 class="section-title">Significados Detalhados</h4>
+              <div class="definitions-list" id="zoomDefsList"></div>
+            </div>
+
+            <!-- Compounds in Zoom -->
+            <div class="zoom-section">
+              <h4 class="section-title">Palavras e Expressões Compostas</h4>
+              <div class="compounds-grid" id="zoomCompoundsGrid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notebook / Saved Words Modal -->
+    <div class="modal-wrapper hidden" id="notebookModal">
+      <div class="modal-backdrop" id="notebookBackdrop"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-badge-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <div>
+              <h3>Meu Caderno de Vocabulário</h3>
+              <p>Caracteres e palavras que você salvou durante os estudos</p>
+            </div>
+          </div>
+          <div class="modal-header-actions">
+            <a href="/api/favorites/export" class="pill-btn-sm" download title="Exportar para Anki ou Excel em formato TSV">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Exportar (Anki/TSV)</span>
+            </a>
+            <button class="close-modal-btn" id="closeNotebookBtn">&times;</button>
+          </div>
+        </div>
+        <div class="glossary-filter-panel">
+          <div class="filter-search-row">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="notebookSearchInput" placeholder="Filtrar palavras salvas..." autocomplete="off">
+            </div>
+            <div class="filter-count-badge" id="notebookCountBadge">0 salvos</div>
+          </div>
+        </div>
+        <div class="saved-words-body" id="savedWordsBody"></div>
+      </div>
+    </div>
+
+    <!-- Categorized Glossary Modal -->
+    <div class="modal-wrapper hidden" id="glossaryModal">
+      <div class="modal-backdrop" id="glossaryBackdrop"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-badge-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            </div>
+            <div>
+              <h3>Glossário Geral de Vocabulário</h3>
+              <p>Categorias de cultivo, combate, exploração, diálogo e chinês essencial</p>
+            </div>
+          </div>
+          <button class="close-modal-btn" id="closeGlossaryBtn">&times;</button>
+        </div>
+
+        <!-- Unified Filter & Search Panel -->
+        <div class="glossary-filter-panel">
+          <div class="filter-search-row">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="glossarySearchInput" placeholder="Filtrar termos por ideograma, pinyin ou tradução..." autocomplete="off">
+              <button id="clearGlossarySearchBtn" class="icon-btn-sm" title="Limpar busca">&times;</button>
+            </div>
+            <div class="filter-count-badge" id="glossaryCountBadge">200 termos</div>
+          </div>
+
+          <!-- Category Chips -->
+          <div class="category-chips-wrapper" id="categoryTabsBar">
+            <button class="cat-pill active" data-cat="all">Todos <span class="chip-num" id="catCountAll">200</span></button>
+            <button class="cat-pill" data-cat="Combate & Técnicas">Combate & Técnicas <span class="chip-num" id="catCountCombat">50</span></button>
+            <button class="cat-pill" data-cat="Cultivo & Xianxia">Cultivo & Xianxia <span class="chip-num" id="catCountCultivation">39</span></button>
+            <button class="cat-pill" data-cat="Social & Relações">Social & Relações <span class="chip-num" id="catCountSocial">29</span></button>
+            <button class="cat-pill" data-cat="Chinês Essencial">Chinês Essencial <span class="chip-num" id="catCountEssential">26</span></button>
+            <button class="cat-pill" data-cat="RPG & Interface">RPG & Interface <span class="chip-num" id="catCountRpg">24</span></button>
+            <button class="cat-pill" data-cat="Itens & Alquimia">Itens & Alquimia <span class="chip-num" id="catCountItems">19</span></button>
+            <button class="cat-pill" data-cat="Mundo & Lugares">Mundo & Lugares <span class="chip-num" id="catCountWorld">13</span></button>
+          </div>
+        </div>
+        <div class="glossary-body" id="glossaryBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
