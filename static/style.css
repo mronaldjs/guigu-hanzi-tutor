@@ -33,6 +33,13 @@
   padding: 0;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-primary);
@@ -42,7 +49,6 @@ body {
     radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
     radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 45%),
     linear-gradient(180deg, #0d1218 0%, #080c10 100%);
-  overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -55,6 +61,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -242,9 +250,11 @@ body {
 /* Main Grid Layout */
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(460px, 570px) 1fr;
+  grid-template-columns: minmax(0, 560px) 1fr;
   gap: 24px;
   align-items: start;
+  min-width: 0;
+  width: 100%;
 }
 
 /* Cards */
@@ -255,6 +265,9 @@ body {
   backdrop-filter: blur(16px);
   padding: 22px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .card-header {
@@ -335,6 +348,8 @@ body {
   margin: 0 auto;
   border-radius: 18px;
   overflow: hidden;
+  contain: paint;
+  transform: translateZ(0);
   box-shadow: 
     0 12px 32px rgba(0, 0, 0, 0.55),
     inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -1372,7 +1387,7 @@ body {
   }
   
   .main-grid {
-    grid-template-columns: minmax(400px, 480px) 1fr;
+    grid-template-columns: minmax(0, 480px) 1fr;
     gap: 18px;
   }
   
@@ -1432,21 +1447,166 @@ body {
     display: none;
   }
 
+  /* Compact Mobile Header */
+  .app-header {
+    padding: 10px 14px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+
+  .header-brand {
+    gap: 10px;
+  }
+
+  .brand-badge {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
   .brand-title {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .brand-sub {
-    font-size: 11.5px;
+    display: none;
   }
 
+  .header-search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search-input-wrapper input {
+    padding: 8px 34px 8px 36px;
+    font-size: 13px;
+  }
+
+  /* Cards */
   .studio-card, .inspector-card {
-    padding: 16px 14px;
+    padding: 14px 12px;
     border-radius: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
+  .card-header {
+    margin-bottom: 10px;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .card-title h3 {
+    font-size: 15px;
+  }
+
+  .section-icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .studio-controls {
+    gap: 6px;
+  }
+
+  .tool-btn {
+    padding: 5px 8px;
+    font-size: 11.5px;
+    gap: 4px;
+    border-radius: 7px;
+  }
+
+  .tool-svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Drawing Canvas Perfectly Sized for Mobile Viewport */
   .canvas-wrapper {
-    max-width: 100%;
+    width: 100%;
+    max-width: min(100%, 310px, 42vh);
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    border-radius: 14px;
+  }
+
+  .grid-border {
+    inset: 10px;
+  }
+
+  .grid-line.horizontal {
+    left: 10px;
+    right: 10px;
+  }
+
+  .grid-line.vertical {
+    top: 10px;
+    bottom: 10px;
+  }
+
+  .grid-line.diagonal-1 {
+    top: 10px;
+    left: 10px;
+    width: calc(141.4% - 28px);
+  }
+
+  .grid-line.diagonal-2 {
+    top: 10px;
+    right: 10px;
+    width: calc(141.4% - 28px);
+  }
+
+  .canvas-hint {
+    font-size: 12px;
+    bottom: 12px;
+    padding: 0 8px;
+  }
+
+  /* Swipeable Horizontal Candidate Bar */
+  .candidates-container {
+    margin-top: 10px;
+  }
+
+  .candidates-label {
+    font-size: 11.5px;
+    margin-bottom: 6px;
+  }
+
+  .candidates-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 8px;
+    gap: 6px;
+    border-radius: 12px;
+    scrollbar-width: none;
+  }
+
+  .candidates-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .candidate-item {
+    flex-shrink: 0;
+    min-width: 48px;
+    height: 50px;
+    padding: 2px 4px;
+  }
+
+  .candidate-empty {
+    font-size: 11.5px;
+    white-space: normal;
+    padding: 6px;
+  }
+
+  .cand-char {
+    font-size: 22px;
+  }
+
+  .cand-pinyin {
+    font-size: 10px;
   }
 
   .char-header {

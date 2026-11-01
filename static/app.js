@@ -109,10 +109,12 @@
 
   // Setup HiDPI Canvas
   function resizeCanvas() {
+    if (!canvasWrapper || !canvas) return;
     const rect = canvasWrapper.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
     ctx.scale(dpr, dpr);
     redrawStrokes();
   }
@@ -1028,6 +1030,16 @@
     });
 
     window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(resizeCanvas, 150);
+    });
+
+    if (window.ResizeObserver && canvasWrapper) {
+      const ro = new ResizeObserver(() => {
+        resizeCanvas();
+      });
+      ro.observe(canvasWrapper);
+    }
   }
 
   function setMobileActiveTab(tab) {
@@ -1044,5 +1056,6 @@
     // Default inspect "仙" (Imortal)
     inspectCharacter('仙');
   });
+  window.addEventListener('load', resizeCanvas);
 
 })();
